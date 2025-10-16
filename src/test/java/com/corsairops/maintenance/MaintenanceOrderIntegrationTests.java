@@ -18,7 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.time.ZoneOffset;
 import java.util.List;
@@ -35,6 +37,8 @@ import static org.hamcrest.Matchers.*;
 @Import(TestcontainersConfiguration.class)
 public class MaintenanceOrderIntegrationTests {
     private static final String VALID_ASSET_ID = "123e4567-e89b-12d3-a456-426614174000";
+    private static final String INVALID_ASSET_ID = "00000000-0000-0000-0000-000000000000";
+
     private static final AssetResponse MOCK_ASSET = new AssetResponse(
             fromString(VALID_ASSET_ID),
             "Tank A",
@@ -79,6 +83,8 @@ public class MaintenanceOrderIntegrationTests {
                 .thenReturn(MOCK_ASSET);
         Mockito.when(userServiceClient.getUsersByIds(VALID_USER_ID, true))
                 .thenReturn(List.of(MOCK_USER));
+        Mockito.when(assetServiceClient.getAssetById(UUID.fromString(INVALID_ASSET_ID)))
+                .thenThrow(new HttpClientErrorException(HttpStatusCode.valueOf(404)));
     }
 
     @AfterEach
@@ -117,6 +123,18 @@ public class MaintenanceOrderIntegrationTests {
     void givenValidRequest_whenCreateOrder_thenCreated() {
         var request = new MaintenanceOrderRequest(VALID_ASSET_ID, "Routine check", OrderStatus.PENDING, 5);
         createOrder(request);
+    }
+
+    @Test
+    void givenNonExistingAssetId_whenCreateOrder_thenNotFound() {
+        var request = new MaintenanceOrderRequest(INVALID_ASSET_ID, "Routine check", OrderStatus.PENDING, 5);
+
+        jsonRequest(request)
+                .header("X-User-Id", VALID_USER_ID)
+                .when()
+                .post()
+                .then()
+                .statusCode(404);
     }
 
     private MaintenanceOrderResponse createOrder(MaintenanceOrderRequest request) {

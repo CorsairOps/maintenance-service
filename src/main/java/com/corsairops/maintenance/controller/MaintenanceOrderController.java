@@ -28,7 +28,7 @@ public class MaintenanceOrderController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public MaintenanceOrderResponse createOrder(@RequestBody @Valid MaintenanceOrderRequest maintenanceOrderRequest,
-                                                @RequestHeader(value = "X-User-Id", required = false) String userId) {
+                                                @RequestHeader(value = "X-User-Id") String userId) {
         MaintenanceOrder order = maintenanceOrderService.createOrder(maintenanceOrderRequest, userId);
         return maintenanceOrderMapper.toResponse(order);
     }
@@ -49,5 +49,23 @@ public class MaintenanceOrderController {
     public MaintenanceOrderResponse getOrderById(@PathVariable Long id) {
         MaintenanceOrder order = maintenanceOrderService.getOrderById(id);
         return maintenanceOrderMapper.toResponse(order);
+    }
+
+    @Operation(summary = "Update a maintenance order by ID")
+    @CommonWriteResponses
+    @PutMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public MaintenanceOrderResponse updateOrder(@PathVariable Long id,
+                                                @RequestBody @Valid MaintenanceOrderRequest maintenanceOrderRequest) {
+        MaintenanceOrder order = maintenanceOrderService.updateOrder(id, maintenanceOrderRequest);
+        return maintenanceOrderMapper.toResponse(order);
+    }
+
+    @Operation(summary = "Delete a maintenance order by ID")
+    @CommonWriteResponses
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteOrder(@PathVariable Long id) {
+        maintenanceOrderService.deleteOrder(id);
     }
 }

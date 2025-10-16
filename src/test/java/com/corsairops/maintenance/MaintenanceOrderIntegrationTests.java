@@ -202,6 +202,58 @@ public class MaintenanceOrderIntegrationTests {
                 .body("priority", equalTo(3));
     }
 
+    @Test
+    void givenInvalidId_whenUpdateOrder_thenNotFound() {
+        var invalidId = 4499999L;
+
+        var request = new MaintenanceOrderRequest(VALID_ASSET_ID, "Routine check", OrderStatus.PENDING, 5);
+
+        jsonRequest(request)
+                .header("X-User-Id", VALID_USER_ID)
+                .when()
+                .put("/{id}", invalidId)
+                .then()
+                .statusCode(404);
+    }
+
+    @Test
+    void givenInvalidRequest_whenUpdateOrder_thenBadRequest() {
+        var request = new MaintenanceOrderRequest(VALID_ASSET_ID, "Routine check", OrderStatus.PENDING, 5);
+        var createdOrder = createOrder(request);
+        Long id = createdOrder.id();
+
+        var invalidRequest = new MaintenanceOrderRequest(null, "", OrderStatus.COMPLETED, -10);
+
+        jsonRequest(invalidRequest)
+                .header("X-User-Id", VALID_USER_ID)
+                .when()
+                .put("/{id}", id)
+                .then()
+                .statusCode(400);
+    }
+
+    @Test
+    void givenValidRequest_whenUpdateOrder_thenUpdated() {
+        var request = new MaintenanceOrderRequest(VALID_ASSET_ID, "Routine check", OrderStatus.PENDING, 5);
+        var createdOrder = createOrder(request);
+        Long id = createdOrder.id();
+
+        var updateRequest = new MaintenanceOrderRequest(VALID_ASSET_ID, "Engine repair", OrderStatus.IN_PROGRESS, 4);
+
+        jsonRequest(updateRequest)
+                .header("X-User-Id", VALID_USER_ID)
+                .when()
+                .put("/{id}", id)
+                .then()
+                .statusCode(200)
+                .body("id", equalTo(Integer.parseInt(id.toString())))
+                .body("asset.id", equalTo(VALID_ASSET_ID))
+                .body("description", equalTo("Engine repair"))
+                .body("status", equalTo("IN_PROGRESS"))
+                .body("priority", equalTo(4));
+    }
+
+
     private MaintenanceOrderResponse createOrder(MaintenanceOrderRequest request) {
         return jsonRequest(request)
                 .header("X-User-Id", VALID_USER_ID)
@@ -216,6 +268,38 @@ public class MaintenanceOrderIntegrationTests {
                 .body("priority", equalTo(request.priority()))
                 .extract()
                 .as(MaintenanceOrderResponse.class);
+    }
+
+    @Test
+    void givenInvalidId_whenDeleteOrder_thenNotFound() {
+        var invalidId = 999L;
+        jsonRequest()
+                .header("X-User-Id", VALID_USER_ID)
+                .when()
+                .delete("/{id}", invalidId)
+                .then()
+                .statusCode(404);
+    }
+
+    @Test
+    void givenValidId_whenDeleteOrder_thenNoContent() {
+        var request = new MaintenanceOrderRequest(VALID_ASSET_ID, "Routine Check", OrderStatus.PENDING, 3);
+        var createdOrder = createOrder(request);
+        Long id = createdOrder.id();
+
+        jsonRequest()
+                .header("X-User-Id", VALID_USER_ID)
+                .when()
+                .delete("/{id}", id)
+                .then()
+                .statusCode(204);
+
+        // Verify deletion
+        jsonRequest()
+                .when()
+                .get("/{id}", id)
+                .then()
+                .statusCode(404);
     }
 
     private RequestSpecification jsonRequest() {

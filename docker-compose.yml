@@ -1,0 +1,21 @@
+services:
+  asset-service-db:
+    image: postgres:15
+    container_name: maintenance-db
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5434:5432"
+    volumes:
+      - maintenance-service-data:/var/lib/postgresql/data
+    networks:
+      - maintenance-service-network
+
+volumes:
+  maintenance-service-data:
+
+networks:
+  maintenance-service-network:
+    driver: bridge

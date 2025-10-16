@@ -137,6 +137,71 @@ public class MaintenanceOrderIntegrationTests {
                 .statusCode(404);
     }
 
+    @Test
+    void givenNoOrders_whenGetOrders_thenEmptyList() {
+        jsonRequest()
+                .when()
+                .get()
+                .then()
+                .statusCode(200)
+                .body("", hasSize(0));
+    }
+
+    @Test
+    void givenOrders_whenGetOrders_thenListOfOrders() {
+        var request1 = new MaintenanceOrderRequest(VALID_ASSET_ID, "Routine check", OrderStatus.PENDING, 5);
+        var request2 = new MaintenanceOrderRequest("223e4567-e89b-12d3-a456-426614174000", "Engine repair", OrderStatus.IN_PROGRESS, 4);
+        createOrder(request1);
+        Mockito.when(assetServiceClient.getAssetById(UUID.fromString("223e4567-e89b-12d3-a456-426614174000")))
+                .thenReturn(new AssetResponse(
+                        fromString("223e4567-e89b-12d3-a456-426614174000"),
+                        "Truck B",
+                        GROUND_VEHICLE,
+                        ACTIVE,
+                        80.0,
+                        80.0,
+                        now().minusDays(20),
+                        now().minusDays(2)
+                ));
+        createOrder(request2);
+
+        jsonRequest()
+                .when()
+                .get()
+                .then()
+                .statusCode(200)
+                .body("", hasSize(2))
+                .body("asset.id", hasItems(VALID_ASSET_ID, "223e4567-e89b-12d3-a456-426614174000"));
+    }
+
+    @Test
+    void givenInvalidId_whenGetOrderById_thenNotFound() {
+        var invalidId = 999L;
+        jsonRequest()
+                .when()
+                .get("/{id}", invalidId)
+                .then()
+                .statusCode(404);
+    }
+
+    @Test
+    void givenValidId_whenGetOrderById_thenOrder() {
+        var request = new MaintenanceOrderRequest(VALID_ASSET_ID, "Routine Check", OrderStatus.PENDING, 3);
+        var createdOrder = createOrder(request);
+        Long id = createdOrder.id();
+
+        jsonRequest()
+                .when()
+                .get("/{id}", id)
+                .then()
+                .statusCode(200)
+                .body("id", equalTo(Integer.parseInt(id.toString())))
+                .body("asset.id", equalTo(VALID_ASSET_ID))
+                .body("description", equalTo("Routine Check"))
+                .body("status", equalTo("PENDING"))
+                .body("priority", equalTo(3));
+    }
+
     private MaintenanceOrderResponse createOrder(MaintenanceOrderRequest request) {
         return jsonRequest(request)
                 .header("X-User-Id", VALID_USER_ID)

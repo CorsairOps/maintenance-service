@@ -1,9 +1,9 @@
 package com.corsairops.maintenance.controller;
 
-import com.corsairops.maintenance.dto.MaintenanceOrderRequest;
-import com.corsairops.maintenance.dto.MaintenanceOrderResponse;
-import com.corsairops.maintenance.model.MaintenanceOrder;
-import com.corsairops.maintenance.service.MaintenanceOrderService;
+import com.corsairops.maintenance.dto.OrderRequest;
+import com.corsairops.maintenance.dto.OrderResponse;
+import com.corsairops.maintenance.model.Order;
+import com.corsairops.maintenance.service.OrderService;
 import com.corsairops.maintenance.util.MaintenanceOrderMapper;
 import com.corsairops.shared.annotations.CommonReadResponses;
 import com.corsairops.shared.annotations.CommonWriteResponses;
@@ -18,18 +18,18 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/maintenance/orders")
 @RequiredArgsConstructor
-public class MaintenanceOrderController {
+public class OrderController {
 
-    private final MaintenanceOrderService maintenanceOrderService;
+    private final OrderService orderService;
     private final MaintenanceOrderMapper maintenanceOrderMapper;
 
     @Operation(summary = "Create a new maintenance order")
     @CommonWriteResponses
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public MaintenanceOrderResponse createOrder(@RequestBody @Valid MaintenanceOrderRequest maintenanceOrderRequest,
-                                                @RequestHeader(value = "X-User-Id") String userId) {
-        MaintenanceOrder order = maintenanceOrderService.createOrder(maintenanceOrderRequest, userId);
+    public OrderResponse createOrder(@RequestBody @Valid OrderRequest orderRequest,
+                                     @RequestHeader(value = "X-User-Id") String userId) {
+        Order order = orderService.createOrder(orderRequest, userId);
         return maintenanceOrderMapper.toResponse(order);
     }
 
@@ -37,8 +37,8 @@ public class MaintenanceOrderController {
     @CommonReadResponses
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<MaintenanceOrderResponse> getAllOrders() {
-        List<MaintenanceOrder> orders = maintenanceOrderService.getAllOrders();
+    public List<OrderResponse> getAllOrders() {
+        List<Order> orders = orderService.getAllOrders();
         return maintenanceOrderMapper.toResponseList(orders);
     }
 
@@ -46,8 +46,8 @@ public class MaintenanceOrderController {
     @CommonReadResponses
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public MaintenanceOrderResponse getOrderById(@PathVariable Long id) {
-        MaintenanceOrder order = maintenanceOrderService.getOrderById(id);
+    public OrderResponse getOrderById(@PathVariable Long id) {
+        Order order = orderService.getOrderById(id);
         return maintenanceOrderMapper.toResponse(order);
     }
 
@@ -55,9 +55,9 @@ public class MaintenanceOrderController {
     @CommonWriteResponses
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public MaintenanceOrderResponse updateOrder(@PathVariable Long id,
-                                                @RequestBody @Valid MaintenanceOrderRequest maintenanceOrderRequest) {
-        MaintenanceOrder order = maintenanceOrderService.updateOrder(id, maintenanceOrderRequest);
+    public OrderResponse updateOrder(@PathVariable Long id,
+                                     @RequestBody @Valid OrderRequest orderRequest) {
+        Order order = orderService.updateOrder(id, orderRequest);
         return maintenanceOrderMapper.toResponse(order);
     }
 
@@ -66,6 +66,6 @@ public class MaintenanceOrderController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteOrder(@PathVariable Long id) {
-        maintenanceOrderService.deleteOrder(id);
+        orderService.deleteOrder(id);
     }
 }

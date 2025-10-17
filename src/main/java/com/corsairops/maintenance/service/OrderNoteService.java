@@ -15,11 +15,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class OrderNoteService {
     private final OrderNoteRepository orderNoteRepository;
-    private final MaintenanceOrderService maintenanceOrderService;
+    private final OrderService orderService;
 
     @Transactional
     public OrderNote addNote(Long orderId, OrderNoteRequest request, String createdBy) {
-        var order = maintenanceOrderService.getOrderById(orderId);
+        var order = orderService.getOrderById(orderId);
 
         var note = OrderNote.builder()
                 .order(order)
@@ -31,13 +31,13 @@ public class OrderNoteService {
 
     @Transactional(readOnly = true)
     public List<OrderNote> getAllNotes(Long orderId) {
-        var order = maintenanceOrderService.getOrderById(orderId);
+        var order = orderService.getOrderById(orderId);
         return orderNoteRepository.findByOrderOrderByCreatedAtDesc(order);
     }
 
     @Transactional
     public void deleteNote(Long orderId, Long noteId) {
-        var order = maintenanceOrderService.getOrderById(orderId);
+        var order = orderService.getOrderById(orderId);
         if (!orderNoteRepository.existsByIdAndOrder(noteId, order)) {
             throw new OrderNoteNotFoundException(String.format("Order with id %d does not have a note with id %d", orderId, noteId), HttpStatus.NOT_FOUND);
         }

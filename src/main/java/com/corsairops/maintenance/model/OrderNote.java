@@ -23,7 +23,7 @@ public class OrderNote {
 
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = false)
-    private MaintenanceOrder order;
+    private Order order;
 
     private String note;
 

@@ -3,7 +3,7 @@ package com.corsairops.maintenance.dto;
 import com.corsairops.maintenance.model.OrderStatus;
 import jakarta.validation.constraints.*;
 
-public record MaintenanceOrderRequest(
+public record OrderRequest(
 
         @NotBlank(message = "AssetId is required.")
         @Size(max = 255, message = "AssetId must be at most 255 characters.")

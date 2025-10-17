@@ -1,9 +1,9 @@
 package com.corsairops.maintenance;
 
-import com.corsairops.maintenance.dto.MaintenanceOrderRequest;
-import com.corsairops.maintenance.dto.MaintenanceOrderResponse;
+import com.corsairops.maintenance.dto.OrderRequest;
+import com.corsairops.maintenance.dto.OrderResponse;
 import com.corsairops.maintenance.model.OrderStatus;
-import com.corsairops.maintenance.repository.MaintenanceOrderRepository;
+import com.corsairops.maintenance.repository.OrderRepository;
 import com.corsairops.shared.client.AssetServiceClient;
 import com.corsairops.shared.client.UserServiceClient;
 import com.corsairops.shared.dto.User;
@@ -34,7 +34,7 @@ import static com.corsairops.maintenance.RestAssuredUtil.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(TestcontainersConfiguration.class)
-public class MaintenanceOrderIntegrationTests {
+public class OrderIntegrationTests {
     private static final String VALID_ASSET_ID = "123e4567-e89b-12d3-a456-426614174000";
     private static final String INVALID_ASSET_ID = "00000000-0000-0000-0000-000000000000";
 
@@ -65,7 +65,7 @@ public class MaintenanceOrderIntegrationTests {
     private int port;
 
     @Autowired
-    private MaintenanceOrderRepository maintenanceOrderRepository;
+    private OrderRepository orderRepository;
 
     @MockitoBean
     private AssetServiceClient assetServiceClient;
@@ -90,12 +90,12 @@ public class MaintenanceOrderIntegrationTests {
     void cleanup() {
         Mockito.reset(assetServiceClient);
         Mockito.reset(userServiceClient);
-        maintenanceOrderRepository.deleteAll();
+        orderRepository.deleteAll();
     }
 
     @Test
     void givenInvalidRequest_whenCreateOrder_thenBadRequest() {
-        var request = new MaintenanceOrderRequest(null, "", OrderStatus.COMPLETED, -10);
+        var request = new OrderRequest(null, "", OrderStatus.COMPLETED, -10);
 
         jsonRequest(request)
                 .header("X-User-Id", VALID_USER_ID)
@@ -107,7 +107,7 @@ public class MaintenanceOrderIntegrationTests {
 
     @Test
     void givenExistingAssetOrder_whenCreateOrder_thenConflict() {
-        var request = new MaintenanceOrderRequest(VALID_ASSET_ID, "Routine check", OrderStatus.PENDING, 5);
+        var request = new OrderRequest(VALID_ASSET_ID, "Routine check", OrderStatus.PENDING, 5);
         createOrder(request);
 
         jsonRequest(request)
@@ -120,13 +120,13 @@ public class MaintenanceOrderIntegrationTests {
 
     @Test
     void givenValidRequest_whenCreateOrder_thenCreated() {
-        var request = new MaintenanceOrderRequest(VALID_ASSET_ID, "Routine check", OrderStatus.PENDING, 5);
+        var request = new OrderRequest(VALID_ASSET_ID, "Routine check", OrderStatus.PENDING, 5);
         createOrder(request);
     }
 
     @Test
     void givenNonExistingAssetId_whenCreateOrder_thenNotFound() {
-        var request = new MaintenanceOrderRequest(INVALID_ASSET_ID, "Routine check", OrderStatus.PENDING, 5);
+        var request = new OrderRequest(INVALID_ASSET_ID, "Routine check", OrderStatus.PENDING, 5);
 
         jsonRequest(request)
                 .header("X-User-Id", VALID_USER_ID)
@@ -148,8 +148,8 @@ public class MaintenanceOrderIntegrationTests {
 
     @Test
     void givenOrders_whenGetOrders_thenListOfOrders() {
-        var request1 = new MaintenanceOrderRequest(VALID_ASSET_ID, "Routine check", OrderStatus.PENDING, 5);
-        var request2 = new MaintenanceOrderRequest("223e4567-e89b-12d3-a456-426614174000", "Engine repair", OrderStatus.IN_PROGRESS, 4);
+        var request1 = new OrderRequest(VALID_ASSET_ID, "Routine check", OrderStatus.PENDING, 5);
+        var request2 = new OrderRequest("223e4567-e89b-12d3-a456-426614174000", "Engine repair", OrderStatus.IN_PROGRESS, 4);
         createOrder(request1);
         Mockito.when(assetServiceClient.getAssetById(UUID.fromString("223e4567-e89b-12d3-a456-426614174000")))
                 .thenReturn(new AssetResponse(
@@ -185,7 +185,7 @@ public class MaintenanceOrderIntegrationTests {
 
     @Test
     void givenValidId_whenGetOrderById_thenOrder() {
-        var request = new MaintenanceOrderRequest(VALID_ASSET_ID, "Routine Check", OrderStatus.PENDING, 3);
+        var request = new OrderRequest(VALID_ASSET_ID, "Routine Check", OrderStatus.PENDING, 3);
         var createdOrder = createOrder(request);
         Long id = createdOrder.id();
 
@@ -205,7 +205,7 @@ public class MaintenanceOrderIntegrationTests {
     void givenInvalidId_whenUpdateOrder_thenNotFound() {
         var invalidId = 4499999L;
 
-        var request = new MaintenanceOrderRequest(VALID_ASSET_ID, "Routine check", OrderStatus.PENDING, 5);
+        var request = new OrderRequest(VALID_ASSET_ID, "Routine check", OrderStatus.PENDING, 5);
 
         jsonRequest(request)
                 .header("X-User-Id", VALID_USER_ID)
@@ -217,11 +217,11 @@ public class MaintenanceOrderIntegrationTests {
 
     @Test
     void givenInvalidRequest_whenUpdateOrder_thenBadRequest() {
-        var request = new MaintenanceOrderRequest(VALID_ASSET_ID, "Routine check", OrderStatus.PENDING, 5);
+        var request = new OrderRequest(VALID_ASSET_ID, "Routine check", OrderStatus.PENDING, 5);
         var createdOrder = createOrder(request);
         Long id = createdOrder.id();
 
-        var invalidRequest = new MaintenanceOrderRequest(null, "", OrderStatus.COMPLETED, -10);
+        var invalidRequest = new OrderRequest(null, "", OrderStatus.COMPLETED, -10);
 
         jsonRequest(invalidRequest)
                 .header("X-User-Id", VALID_USER_ID)
@@ -233,11 +233,11 @@ public class MaintenanceOrderIntegrationTests {
 
     @Test
     void givenValidRequest_whenUpdateOrder_thenUpdated() {
-        var request = new MaintenanceOrderRequest(VALID_ASSET_ID, "Routine check", OrderStatus.PENDING, 5);
+        var request = new OrderRequest(VALID_ASSET_ID, "Routine check", OrderStatus.PENDING, 5);
         var createdOrder = createOrder(request);
         Long id = createdOrder.id();
 
-        var updateRequest = new MaintenanceOrderRequest(VALID_ASSET_ID, "Engine repair", OrderStatus.IN_PROGRESS, 4);
+        var updateRequest = new OrderRequest(VALID_ASSET_ID, "Engine repair", OrderStatus.IN_PROGRESS, 4);
 
         jsonRequest(updateRequest)
                 .header("X-User-Id", VALID_USER_ID)
@@ -253,7 +253,7 @@ public class MaintenanceOrderIntegrationTests {
     }
 
 
-    private MaintenanceOrderResponse createOrder(MaintenanceOrderRequest request) {
+    private OrderResponse createOrder(OrderRequest request) {
         return jsonRequest(request)
                 .header("X-User-Id", VALID_USER_ID)
                 .when()
@@ -266,7 +266,7 @@ public class MaintenanceOrderIntegrationTests {
                 .body("status", equalTo(request.status().name()))
                 .body("priority", equalTo(request.priority()))
                 .extract()
-                .as(MaintenanceOrderResponse.class);
+                .as(OrderResponse.class);
     }
 
     @Test
@@ -282,7 +282,7 @@ public class MaintenanceOrderIntegrationTests {
 
     @Test
     void givenValidId_whenDeleteOrder_thenNoContent() {
-        var request = new MaintenanceOrderRequest(VALID_ASSET_ID, "Routine Check", OrderStatus.PENDING, 3);
+        var request = new OrderRequest(VALID_ASSET_ID, "Routine Check", OrderStatus.PENDING, 3);
         var createdOrder = createOrder(request);
         Long id = createdOrder.id();
 

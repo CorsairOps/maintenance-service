@@ -1,12 +1,12 @@
 package com.corsairops.maintenance;
 
-import com.corsairops.maintenance.dto.MaintenanceOrderRequest;
+import com.corsairops.maintenance.dto.OrderRequest;
 import com.corsairops.maintenance.exception.OpenOrderExistsException;
 import com.corsairops.maintenance.exception.OrderNotFoundException;
-import com.corsairops.maintenance.model.MaintenanceOrder;
+import com.corsairops.maintenance.model.Order;
 import com.corsairops.maintenance.model.OrderStatus;
-import com.corsairops.maintenance.repository.MaintenanceOrderRepository;
-import com.corsairops.maintenance.service.MaintenanceOrderService;
+import com.corsairops.maintenance.repository.OrderRepository;
+import com.corsairops.maintenance.service.OrderService;
 import com.corsairops.shared.client.AssetServiceClient;
 import com.corsairops.shared.dto.asset.AssetResponse;
 import com.corsairops.shared.dto.asset.AssetStatus;
@@ -35,7 +35,7 @@ import static org.mockito.Mockito.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(TestcontainersConfiguration.class)
-public class MaintenanceOrderServiceTests {
+public class OrderServiceTests {
 
     private static final String INVALID_ASSET_ID = "96f7c53a-2f1d-47fe-b3f5-eaa6b46372da";
 
@@ -53,10 +53,10 @@ public class MaintenanceOrderServiceTests {
     );
 
     @Autowired
-    private MaintenanceOrderRepository maintenanceOrderRepository;
+    private OrderRepository orderRepository;
 
     @Autowired
-    private MaintenanceOrderService maintenanceOrderService;
+    private OrderService orderService;
 
     @MockitoBean
     private AssetServiceClient assetServiceClient;
@@ -73,12 +73,12 @@ public class MaintenanceOrderServiceTests {
 
     @AfterEach
     void cleanUp() {
-        maintenanceOrderRepository.deleteAll();
+        orderRepository.deleteAll();
     }
 
     @Test
     void givenInvalidAssetId_whenCreateOrder_thenThrowException() {
-        var invalidOrderRequest = new MaintenanceOrderRequest(
+        var invalidOrderRequest = new OrderRequest(
                 INVALID_ASSET_ID,
                 "Fix the leaking pipe",
                 OrderStatus.PENDING,
@@ -86,7 +86,7 @@ public class MaintenanceOrderServiceTests {
         );
 
         assertThrows(HttpClientErrorException.class, () -> {
-            maintenanceOrderService.createOrder(invalidOrderRequest, null);
+            orderService.createOrder(invalidOrderRequest, null);
         });
     }
 
@@ -94,7 +94,7 @@ public class MaintenanceOrderServiceTests {
     void givenExistingOpenOrder_whenCreateOrder_thenThrowException() {
         createExistingOrder();
 
-        MaintenanceOrderRequest request = new MaintenanceOrderRequest(
+        OrderRequest request = new OrderRequest(
                 VALID_ASSET_ID,
                 "New order attempt",
                 OrderStatus.PENDING,
@@ -102,20 +102,20 @@ public class MaintenanceOrderServiceTests {
         );
 
         assertThrows(OpenOrderExistsException.class, () -> {
-            maintenanceOrderService.createOrder(request, null);
+            orderService.createOrder(request, null);
         });
     }
 
     @Test
     void givenValidOrderRequest_whenCreateOrder_thenReturnOrder() {
-        MaintenanceOrderRequest request = new MaintenanceOrderRequest(
+        OrderRequest request = new OrderRequest(
                 VALID_ASSET_ID,
                 "Routine Maintenance",
                 OrderStatus.PENDING,
                 2
         );
 
-        MaintenanceOrder order = maintenanceOrderService.createOrder(request, "test-user");
+        Order order = orderService.createOrder(request, "test-user");
 
         assertThat(order.getId(), notNullValue());
         assertThat(order.getAssetId(), equalTo(VALID_ASSET_ID));
@@ -128,7 +128,7 @@ public class MaintenanceOrderServiceTests {
     @Test
     void whenGetAllOrders_thenReturnOrderList() {
         createExistingOrder();
-        List<MaintenanceOrder> orders = maintenanceOrderService.getAllOrders();
+        List<Order> orders = orderService.getAllOrders();
 
         assertThat(orders, Matchers.hasSize(1));
         assertThat(orders.getFirst().getAssetId(), equalTo(VALID_ASSET_ID));
@@ -137,7 +137,7 @@ public class MaintenanceOrderServiceTests {
     @Test
     void givenInvalidOrderId_whenGetOrderById_thenThrowException() {
         assertThrows(OrderNotFoundException.class, () -> {
-            maintenanceOrderService.getOrderById(999L);
+            orderService.getOrderById(999L);
         });
     }
 
@@ -145,7 +145,7 @@ public class MaintenanceOrderServiceTests {
     void givenValidOrderId_whenGetOrderById_thenReturnOrder() {
         var existingOrder = createExistingOrder();
 
-        var fetchedOrder = maintenanceOrderService.getOrderById(existingOrder.getId());
+        var fetchedOrder = orderService.getOrderById(existingOrder.getId());
 
         assertThat(fetchedOrder.getId(), equalTo(existingOrder.getId()));
         assertThat(fetchedOrder.getAssetId(), equalTo(VALID_ASSET_ID));
@@ -157,7 +157,7 @@ public class MaintenanceOrderServiceTests {
     @Test
     void givenInvalidRequest_whenUpdateOrder_thenThrowOrderNotFoundException() {
         assertThrows(OrderNotFoundException.class, () -> {
-            maintenanceOrderService.updateOrder(333L, new MaintenanceOrderRequest(
+            orderService.updateOrder(333L, new OrderRequest(
                     "some-asset-id",
                     "Some description",
                     OrderStatus.PENDING,
@@ -170,14 +170,14 @@ public class MaintenanceOrderServiceTests {
     void givenValidRequest_whenUpdateOrder_thenReturnUpdatedOrder() {
         var existingOrder = createExistingOrder();
 
-        var updateRequest = new MaintenanceOrderRequest(
+        var updateRequest = new OrderRequest(
                 VALID_ASSET_ID,
                 "Updated description",
                 OrderStatus.IN_PROGRESS,
                 1
         );
 
-        var updatedOrder = maintenanceOrderService.updateOrder(existingOrder.getId(), updateRequest);
+        var updatedOrder = orderService.updateOrder(existingOrder.getId(), updateRequest);
         assertThat(updatedOrder.getId(), equalTo(existingOrder.getId()));
         assertThat(updatedOrder.getAssetId(), equalTo(VALID_ASSET_ID));
         assertThat(updatedOrder.getDescription(), equalTo("Updated description"));
@@ -188,7 +188,7 @@ public class MaintenanceOrderServiceTests {
     @Test
     void givenInvalidId_whenDeleteOrder_thenThrowOrderNotFoundException() {
         assertThrows(OrderNotFoundException.class, () -> {
-            maintenanceOrderService.deleteOrder(444L);
+            orderService.deleteOrder(444L);
         });
     }
 
@@ -196,18 +196,18 @@ public class MaintenanceOrderServiceTests {
     void givenValidId_whenDeleteOrder_thenOrderIsDeleted() {
         var existingOrder = createExistingOrder();
         long orderId = existingOrder.getId();
-        maintenanceOrderService.deleteOrder(existingOrder.getId());
-        assertFalse(maintenanceOrderRepository.existsById(orderId));
+        orderService.deleteOrder(existingOrder.getId());
+        assertFalse(orderRepository.existsById(orderId));
     }
 
-    private MaintenanceOrder createExistingOrder() {
+    private Order createExistingOrder() {
         // Create existing order
-        MaintenanceOrder order = MaintenanceOrder.builder()
+        Order order = Order.builder()
                 .assetId(VALID_ASSET_ID)
                 .description("Existing order")
                 .status(OrderStatus.PENDING)
                 .priority(3)
                 .build();
-        return maintenanceOrderRepository.save(order);
+        return orderRepository.save(order);
     }
 }

@@ -17,7 +17,7 @@ import java.util.List;
 @EntityListeners(AuditingEntityListener.class)
 @Data
 @AllArgsConstructor @NoArgsConstructor @Builder
-public class MaintenanceOrder {
+public class Order {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

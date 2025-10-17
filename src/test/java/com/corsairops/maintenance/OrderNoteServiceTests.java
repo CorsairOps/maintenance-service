@@ -3,10 +3,10 @@ package com.corsairops.maintenance;
 
 import com.corsairops.maintenance.dto.OrderNoteRequest;
 import com.corsairops.maintenance.exception.OrderNotFoundException;
-import com.corsairops.maintenance.model.MaintenanceOrder;
+import com.corsairops.maintenance.model.Order;
 import com.corsairops.maintenance.model.OrderNote;
 import com.corsairops.maintenance.model.OrderStatus;
-import com.corsairops.maintenance.repository.MaintenanceOrderRepository;
+import com.corsairops.maintenance.repository.OrderRepository;
 import com.corsairops.maintenance.repository.OrderNoteRepository;
 import com.corsairops.maintenance.service.OrderNoteService;
 import org.junit.jupiter.api.AfterEach;
@@ -33,14 +33,14 @@ public class OrderNoteServiceTests {
     private OrderNoteService orderNoteService;
 
     @Autowired
-    private MaintenanceOrderRepository maintenanceOrderRepository;
+    private OrderRepository orderRepository;
 
     private Long validOrderId;
 
     @BeforeEach
     void setup() {
         // Create valid maintenance order and get its ID
-        MaintenanceOrder order = MaintenanceOrder.builder()
+        Order order = Order.builder()
                 .assetId("123e4567-e89b-12d3-a456-426614174000")
                 .description("Routine check")
                 .status(OrderStatus.PENDING)
@@ -48,13 +48,13 @@ public class OrderNoteServiceTests {
                 .placedBy("tech1")
                 .build();
 
-        var savedOrder = maintenanceOrderRepository.save(order);
+        var savedOrder = orderRepository.save(order);
         validOrderId = savedOrder.getId();
     }
 
     @AfterEach
     void cleanup() {
-        maintenanceOrderRepository.deleteAll();
+        orderRepository.deleteAll();
         orderNoteRepository.deleteAll();
     }
 

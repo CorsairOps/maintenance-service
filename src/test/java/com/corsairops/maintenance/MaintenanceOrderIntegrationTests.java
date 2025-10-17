@@ -9,7 +9,6 @@ import com.corsairops.shared.client.UserServiceClient;
 import com.corsairops.shared.dto.User;
 import com.corsairops.shared.dto.asset.AssetResponse;
 import io.restassured.RestAssured;
-import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,8 +29,8 @@ import static com.corsairops.shared.dto.asset.AssetStatus.*;
 import static com.corsairops.shared.dto.asset.AssetType.*;
 import static java.time.LocalDateTime.*;
 import static java.util.UUID.*;
-import static io.restassured.RestAssured.*;
 import static org.hamcrest.Matchers.*;
+import static com.corsairops.maintenance.RestAssuredUtil.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(TestcontainersConfiguration.class)
@@ -300,14 +299,6 @@ public class MaintenanceOrderIntegrationTests {
                 .get("/{id}", id)
                 .then()
                 .statusCode(404);
-    }
-
-    private RequestSpecification jsonRequest() {
-        return given().contentType("application/json");
-    }
-
-    private RequestSpecification jsonRequest(Object body) {
-        return jsonRequest().body(body);
     }
 
 }

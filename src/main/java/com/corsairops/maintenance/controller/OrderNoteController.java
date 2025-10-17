@@ -8,6 +8,7 @@ import com.corsairops.maintenance.util.OrderNoteMapper;
 import com.corsairops.shared.annotations.CommonReadResponses;
 import com.corsairops.shared.annotations.CommonWriteResponses;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Slf4j
+@Tag(name = "Maintenance Order Notes", description = "APIs for managing notes on maintenance orders")
 @RestController
 @RequestMapping("/api/maintenance/orders/{orderId}/notes")
 @RequiredArgsConstructor

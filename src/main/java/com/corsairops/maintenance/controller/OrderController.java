@@ -8,6 +8,7 @@ import com.corsairops.maintenance.util.OrderMapper;
 import com.corsairops.shared.annotations.CommonReadResponses;
 import com.corsairops.shared.annotations.CommonWriteResponses;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Maintenance Orders", description = "APIs for managing maintenance orders")
 @RestController
 @RequestMapping("/api/maintenance/orders")
 @RequiredArgsConstructor

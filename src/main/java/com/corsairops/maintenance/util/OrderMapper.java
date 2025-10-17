@@ -3,7 +3,6 @@ package com.corsairops.maintenance.util;
 import com.corsairops.maintenance.dto.OrderResponse;
 import com.corsairops.maintenance.model.Order;
 import com.corsairops.shared.client.AssetServiceClient;
-import com.corsairops.shared.client.UserServiceClient;
 import com.corsairops.shared.dto.User;
 import com.corsairops.shared.dto.asset.AssetResponse;
 import lombok.RequiredArgsConstructor;
@@ -19,10 +18,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderMapper {
     private final AssetServiceClient assetServiceClient;
-    private final UserServiceClient userServiceClient;
+    private final UserServiceClientUtil userServiceClientUtil;
 
     /**
      * Convert a MaintenanceOrder entity to a MaintenanceOrderResponse DTO.
+     *
      * @param order the MaintenanceOrder entity
      * @return the MaintenanceOrderResponse DTO
      */
@@ -35,34 +35,14 @@ public class OrderMapper {
     }
 
     private Map<String, User> getRelevantUsers(Order order) {
-        try {
-            StringBuilder userIds = new StringBuilder();
-            userIds.append(order.getPlacedBy());
-            if (order.getCompletedBy() != null) {
-                userIds.append(",").append(order.getCompletedBy());
-            }
-
-            return userServiceClient.getUsersByIds(userIds.toString(), true)
-                    .stream()
-                    .collect(Collectors.toMap(User::id, user -> user));
-        } catch (HttpClientErrorException e) {
-            log.error("Error fetching users for order {}: {}", order.getId(), e.getMessage());
-            Map<String, User> users = new HashMap<>();
-            users.put(order.getPlacedBy(), new User(order.getPlacedBy(), null, null, null, null, true, null, null));
-            if (order.getCompletedBy() != null) {
-                users.put(order.getCompletedBy(), new User(order.getCompletedBy(), null, null, null, null, true, null, null));
-            }
-            return users;
+        Set<String> userIds = new HashSet<>();
+        if (order.getPlacedBy() != null) {
+            userIds.add(order.getPlacedBy());
         }
-    }
-
-    private User getUserById(String userId) {
-        try {
-            return userServiceClient.getUserById(userId);
-        } catch (HttpClientErrorException e) {
-            log.error("Error fetching user {}: {}", userId, e.getMessage());
-            return new User(userId, null, null, null, null, true, null, null);
+        if (order.getCompletedBy() != null) {
+            userIds.add(order.getCompletedBy());
         }
+        return userServiceClientUtil.getUsersMap(userIds);
     }
 
     private AssetResponse getAssetById(String assetId) {
@@ -76,6 +56,7 @@ public class OrderMapper {
 
     /**
      * Convert a list of MaintenanceOrder entities to a list of MaintenanceOrderResponse DTOs.
+     *
      * @param orders the list of MaintenanceOrder entities
      * @return the list of MaintenanceOrderResponse DTOs
      */
@@ -98,28 +79,16 @@ public class OrderMapper {
     }
 
     private Map<String, User> getRelevantUsers(List<Order> orders) {
-        try {
-            Set<String> userIds = new HashSet<>();
-            orders.forEach(order -> {
+        Set<String> userIds = new HashSet<>();
+        orders.forEach(order -> {
+            if (order.getPlacedBy() != null) {
                 userIds.add(order.getPlacedBy());
-                if (order.getCompletedBy() != null) {
-                    userIds.add(order.getCompletedBy());
-                }
-            });
-            String joinedUserIds = String.join(",", userIds);
-            return userServiceClient.getUsersByIds(joinedUserIds, true).stream()
-                    .collect(Collectors.toMap(User::id, user -> user));
-        } catch (HttpClientErrorException e) {
-            log.error("Error fetching users for orders: {}", e.getMessage());
-            Map<String, User> users = new HashMap<>();
-            orders.forEach(order -> {
-                users.put(order.getPlacedBy(), new User(order.getPlacedBy(), null, null, null, null, true, null, null));
-                if (order.getCompletedBy() != null) {
-                    users.put(order.getCompletedBy(), new User(order.getCompletedBy(), null, null, null, null, true, null, null));
-                }
-            });
-            return users;
-        }
+            }
+            if (order.getCompletedBy() != null) {
+                userIds.add(order.getCompletedBy());
+            }
+        });
+        return userServiceClientUtil.getUsersMap(userIds);
     }
 
     private Map<String, AssetResponse> getRelevantAssets(List<Order> orders) {

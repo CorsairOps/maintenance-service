@@ -2,9 +2,9 @@ package com.corsairops.maintenance;
 
 import com.corsairops.maintenance.dto.OrderNoteRequest;
 import com.corsairops.maintenance.dto.OrderNoteResponse;
-import com.corsairops.maintenance.model.MaintenanceOrder;
+import com.corsairops.maintenance.model.Order;
 import com.corsairops.maintenance.model.OrderStatus;
-import com.corsairops.maintenance.repository.MaintenanceOrderRepository;
+import com.corsairops.maintenance.repository.OrderRepository;
 import com.corsairops.shared.client.UserServiceClient;
 import com.corsairops.shared.dto.User;
 import io.restassured.RestAssured;
@@ -42,9 +42,9 @@ public class OrderNoteIntegrationTests {
     int port;
 
     @Autowired
-    private MaintenanceOrderRepository maintenanceOrderRepository;
+    private OrderRepository orderRepository;
 
-    private MaintenanceOrder mockOrder;
+    private Order mockOrder;
 
     @MockitoBean
     private UserServiceClient userServiceClient;
@@ -55,7 +55,7 @@ public class OrderNoteIntegrationTests {
         RestAssured.basePath = "/api/maintenance/orders";
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
         // Add mock order
-        var sampleOrder = MaintenanceOrder.builder()
+        var sampleOrder = Order.builder()
                 .assetId(randomUUID().toString())
                 .description("Engine check")
                 .status(OrderStatus.PENDING)
@@ -65,7 +65,7 @@ public class OrderNoteIntegrationTests {
                 .createdAt(now())
                 .updatedAt(now())
                 .build();
-        mockOrder = maintenanceOrderRepository.save(sampleOrder);
+        mockOrder = orderRepository.save(sampleOrder);
         Mockito.when(userServiceClient.getUserById(MOCK_USER.id()))
                 .thenReturn(MOCK_USER);
         Mockito.when(userServiceClient.getUsersByIds(Mockito.anyString(), Mockito.anyBoolean()))

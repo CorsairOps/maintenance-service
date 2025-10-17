@@ -1,7 +1,7 @@
 package com.corsairops.maintenance.util;
 
-import com.corsairops.maintenance.dto.MaintenanceOrderResponse;
-import com.corsairops.maintenance.model.MaintenanceOrder;
+import com.corsairops.maintenance.dto.OrderResponse;
+import com.corsairops.maintenance.model.Order;
 import com.corsairops.shared.client.AssetServiceClient;
 import com.corsairops.shared.client.UserServiceClient;
 import com.corsairops.shared.dto.User;
@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class MaintenanceOrderMapper {
+public class OrderMapper {
     private final AssetServiceClient assetServiceClient;
     private final UserServiceClient userServiceClient;
 
@@ -26,7 +26,7 @@ public class MaintenanceOrderMapper {
      * @param order the MaintenanceOrder entity
      * @return the MaintenanceOrderResponse DTO
      */
-    public MaintenanceOrderResponse toResponse(MaintenanceOrder order) {
+    public OrderResponse toResponse(Order order) {
         AssetResponse asset = getAssetById(order.getAssetId());
         Map<String, User> users = getRelevantUsers(order);
         User placedBy = users.get(order.getPlacedBy());
@@ -34,7 +34,7 @@ public class MaintenanceOrderMapper {
         return createResponse(order, asset, placedBy, completedBy);
     }
 
-    private Map<String, User> getRelevantUsers(MaintenanceOrder order) {
+    private Map<String, User> getRelevantUsers(Order order) {
         try {
             StringBuilder userIds = new StringBuilder();
             userIds.append(order.getPlacedBy());
@@ -79,7 +79,7 @@ public class MaintenanceOrderMapper {
      * @param orders the list of MaintenanceOrder entities
      * @return the list of MaintenanceOrderResponse DTOs
      */
-    public List<MaintenanceOrderResponse> toResponseList(List<MaintenanceOrder> orders) {
+    public List<OrderResponse> toResponseList(List<Order> orders) {
         if (orders.isEmpty()) {
             return Collections.emptyList();
         }
@@ -87,8 +87,8 @@ public class MaintenanceOrderMapper {
         Map<String, AssetResponse> assets = getRelevantAssets(orders);
         Map<String, User> users = getRelevantUsers(orders);
 
-        List<MaintenanceOrderResponse> responses = new ArrayList<>();
-        for (MaintenanceOrder order : orders) {
+        List<OrderResponse> responses = new ArrayList<>();
+        for (Order order : orders) {
             AssetResponse asset = assets.get(order.getAssetId());
             User placedBy = users.get(order.getPlacedBy());
             User completedBy = order.getCompletedBy() != null ? users.get(order.getCompletedBy()) : null;
@@ -97,7 +97,7 @@ public class MaintenanceOrderMapper {
         return responses;
     }
 
-    private Map<String, User> getRelevantUsers(List<MaintenanceOrder> orders) {
+    private Map<String, User> getRelevantUsers(List<Order> orders) {
         try {
             Set<String> userIds = new HashSet<>();
             orders.forEach(order -> {
@@ -122,10 +122,10 @@ public class MaintenanceOrderMapper {
         }
     }
 
-    private Map<String, AssetResponse> getRelevantAssets(List<MaintenanceOrder> orders) {
+    private Map<String, AssetResponse> getRelevantAssets(List<Order> orders) {
         try {
             Set<String> assetIds = orders.stream()
-                    .map(MaintenanceOrder::getAssetId)
+                    .map(Order::getAssetId)
                     .collect(Collectors.toSet());
             Map<String, AssetResponse> assets = new HashMap<>();
             for (String assetId : assetIds) {
@@ -144,8 +144,8 @@ public class MaintenanceOrderMapper {
         }
     }
 
-    private static MaintenanceOrderResponse createResponse(MaintenanceOrder order, AssetResponse asset, User placedBy, User completedBy) {
-        return new MaintenanceOrderResponse(
+    private static OrderResponse createResponse(Order order, AssetResponse asset, User placedBy, User completedBy) {
+        return new OrderResponse(
                 order.getId(),
                 asset,
                 order.getDescription(),

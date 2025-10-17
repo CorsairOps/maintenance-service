@@ -6,7 +6,7 @@ import com.corsairops.shared.dto.asset.AssetResponse;
 
 import java.time.LocalDateTime;
 
-public record MaintenanceOrderResponse(
+public record OrderResponse(
         Long id,
         AssetResponse asset,
         String description,

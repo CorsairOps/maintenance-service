@@ -35,12 +35,17 @@ public class OrderController {
         return orderMapper.toResponse(order);
     }
 
-    @Operation(summary = "Get a list of all maintenance orders")
+    @Operation(summary = "Get a list of all maintenance orders. Optionally filter by asset ID")
     @CommonReadResponses
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<OrderResponse> getAllOrders() {
-        List<Order> orders = orderService.getAllOrders();
+    public List<OrderResponse> getAllOrders(@RequestParam(value = "assetId", required = false) String assetId) {
+        List<Order> orders;
+        if (assetId != null && !assetId.isBlank()) {
+            orders = orderService.getAllOrders(assetId);
+        } else {
+            orders = orderService.getAllOrders();
+        }
         return orderMapper.toResponseList(orders);
     }
 

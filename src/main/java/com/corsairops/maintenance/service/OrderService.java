@@ -49,6 +49,11 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
+    public List<Order> getAllOrders(String assetId) {
+        return orderRepository.findByAssetId(assetId);
+    }
+
+    @Transactional(readOnly = true)
     public Order getOrderById(Long orderId) {
         return orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order with ID " + orderId + " not found.", HttpStatus.NOT_FOUND));

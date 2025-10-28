@@ -135,6 +135,23 @@ public class OrderServiceTests {
     }
 
     @Test
+    void whenGetAllOrdersByAssetId_thenReturnOrderList() {
+        createExistingOrder();
+        List<Order> orders = orderService.getAllOrders(VALID_ASSET_ID);
+
+        assertThat(orders, Matchers.hasSize(1));
+        assertThat(orders.getFirst().getAssetId(), equalTo(VALID_ASSET_ID));
+    }
+
+    @Test
+    void whenGetAllOrdersByNonExistingAssetId_thenReturnEmptyList() {
+        createExistingOrder();
+        List<Order> orders = orderService.getAllOrders(INVALID_ASSET_ID);
+
+        assertThat(orders, Matchers.hasSize(0));
+    }
+
+    @Test
     void givenInvalidOrderId_whenGetOrderById_thenThrowException() {
         assertThrows(OrderNotFoundException.class, () -> {
             orderService.getOrderById(999L);

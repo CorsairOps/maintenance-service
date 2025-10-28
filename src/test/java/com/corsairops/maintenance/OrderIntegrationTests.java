@@ -174,6 +174,34 @@ public class OrderIntegrationTests {
     }
 
     @Test
+    void givenOrders_whenGetOrdersByAssetId_thenListOfOrders() {
+        var request1 = new OrderRequest(VALID_ASSET_ID, "Routine check", OrderStatus.PENDING, 5);
+        var request2 = new OrderRequest("223e4567-e89b-12d3-a456-426614174000", "Engine repair", OrderStatus.IN_PROGRESS, 4);
+        createOrder(request1);
+        Mockito.when(assetServiceClient.getAssetById(UUID.fromString("223e4567-e89b-12d3-a456-426614174000")))
+                .thenReturn(new AssetResponse(
+                        fromString("223e4567-e89b-12d3-a456-426614174000"),
+                        "Truck B",
+                        GROUND_VEHICLE,
+                        ACTIVE,
+                        80.0,
+                        80.0,
+                        now().minusDays(20),
+                        now().minusDays(2)
+                ));
+        createOrder(request2);
+
+        jsonRequest()
+                .queryParam("assetId", VALID_ASSET_ID)
+                .when()
+                .get()
+                .then()
+                .statusCode(200)
+                .body("", hasSize(1))
+                .body("asset.id", hasItem(VALID_ASSET_ID));
+    }
+
+    @Test
     void givenInvalidId_whenGetOrderById_thenNotFound() {
         var invalidId = 999L;
         jsonRequest()
